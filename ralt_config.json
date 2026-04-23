@@ -1,0 +1,19 @@
+{
+    "app_overrides": {
+        "msedge.exe": "Edge",
+        "chrome.exe": "Chrome",
+        "rider64.exe": "Rider",
+        "code.exe": "VS Code",
+        "devenv.exe": "Visual Studio",
+        "explorer.exe": "Explorer",
+        "notepad.exe": "Notepad",
+        "cmd.exe": "Command Prompt",
+        "powershell.exe": "PowerShell",
+        "windowsterminal.exe": "Terminal",
+        "wt.exe": "Terminal"
+    },
+    "letter_overrides": {
+        "VS Code": "c",
+        "ChatGPT": "g"
+    }
+}
