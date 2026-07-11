@@ -303,8 +303,18 @@ class RAlt:
             self.remove_letter_hooks()
 
     def keyboard_worker(self) -> None:
-        keyboard.on_press_key("right alt", self.trigger_down, suppress=True)
-        keyboard.on_release_key("right alt", self.trigger_up, suppress=True)
+        # keyboard.on_press_key("right alt") also registers Left Alt on
+        # Windows because the library expands that name to scan code 56.
+        # Filtering decoded events keeps Left Alt completely untouched.
+        def handle_trigger(event: keyboard.KeyboardEvent) -> None:
+            if event.name != "right alt":
+                return
+            if event.event_type == keyboard.KEY_DOWN:
+                self.trigger_down(event)
+            elif event.event_type == keyboard.KEY_UP:
+                self.trigger_up(event)
+
+        keyboard.hook(handle_trigger)
         keyboard.wait()
 
     @staticmethod
