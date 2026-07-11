@@ -10,10 +10,11 @@
         "cmd.exe": "Command Prompt",
         "powershell.exe": "PowerShell",
         "windowsterminal.exe": "Terminal",
-        "wt.exe": "Terminal"
+        "wt.exe": "Terminal",
+        "steamwebhelper.exe": "Steam"
     },
     "letter_overrides": {
-        "VS Code": "c",
-        "ChatGPT": "g"
+        "VS Code": "v",
+        "ChatGPT": "c"
     }
 }

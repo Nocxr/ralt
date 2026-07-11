@@ -330,6 +330,10 @@ class RAlt:
             save_config(self.config)
         os.startfile(CONFIG_PATH)
 
+    def reload_config(self, _icon=None, _item=None) -> None:
+        with self.state_lock:
+            self.config = load_config()
+
     def quit(self, icon=None, _item=None) -> None:
         keyboard.unhook_all()
         dpg.stop_dearpygui()
@@ -340,6 +344,7 @@ class RAlt:
         self.tray_icon = pystray.Icon(
             "ralt", self.tray_image(), APP_NAME,
             pystray.Menu(pystray.MenuItem("Edit config", self.open_config),
+                         pystray.MenuItem("Reload config", self.reload_config),
                          pystray.MenuItem("Quit", self.quit)),
         )
         self.tray_icon.run_detached()

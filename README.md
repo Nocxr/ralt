@@ -12,6 +12,6 @@ py -m venv .venv
 .venv\Scripts\python main.py
 ```
 
-The tray icon can open `ralt_config.json`, where executable display names and custom letters can be assigned. Restart rAlt after editing the file.
+The tray icon can open `ralt_config.json`, where executable display names and custom letters can be assigned. Choose **Reload config** from the tray menu after saving changes.
 
 Some systems require running rAlt as administrator for global key suppression or for switching to elevated applications.
