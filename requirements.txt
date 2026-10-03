@@ -1,4 +1,0 @@
-dearpygui==2.3
-keyboard==0.13.5
-pillow==12.2.0
-pystray==0.19.5

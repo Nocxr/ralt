@@ -1,17 +1,13 @@
 # rAlt
 
-A minimal, Windows-only application switcher inspired by macOS [rcmd](https://lowtechguys.com/rcmd/).
+Windows application switching with Right Alt plus a letter, using the current engine extracted from Dashboard.
 
-Hold **Right Alt**, then press the first letter of an application's name. Press the same letter again to cycle through matching windows. Release Right Alt or press Escape to dismiss the overlay.
+The standalone executable is a tray app. Right-click its tray icon to enable/disable switching, edit or reload ralt_config.json, or exit. The engine retains Dashboard's current matching, grouping, recent-window cycling, overlay and configuration behavior. The previous Python implementation remains in Git history.
 
-## Run
+Build with `make`, launch with `make run`, and register the `ralt` command with `make install`. See [BUILDING.md](BUILDING.md) for the shared commands.
 
-```powershell
-py -m venv .venv
-.venv\Scripts\pip install -r requirements.txt
-.venv\Scripts\python main.py
-```
+## Dashboard integration
 
-The tray icon can open `ralt_config.json`, where executable display names and custom letters can be assigned. Choose **Reload config** from the tray menu after saving changes.
+`RAltCore` / `rAlt::Core` is a standalone C++ library with no Dashboard or ImGui dependency. Dashboard pins this repo as `third_party/ralt`, links the core into its RAlt module DLL, and owns its settings/plugin adapter. Set `RALT_BUILD_STANDALONE=OFF` when embedding.
 
-Some systems require running rAlt as administrator for global key suppression or for switching to elevated applications.
+Use either Dashboard's enabled rAlt module or the standalone app as the active hook host to avoid processing the same shortcut twice. The standalone build keeps its config beside its executable, matching the current engine's config-location behavior.
