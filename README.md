@@ -1,6 +1,6 @@
 # rAlt
 
-Windows application switching with Right Alt plus a letter, using the current engine extracted from Dashboard.
+Windows application switching with Right Alt plus a letter, plus Right Alt + / to toggle back to the previously focused app/window, using the current engine extracted from Dashboard.
 
 The standalone executable is a tray app. Right-click its tray icon to enable/disable switching, edit or reload ralt_config.json, or exit. The engine retains Dashboard's current matching, grouping, recent-window cycling, overlay and configuration behavior. The previous Python implementation remains in Git history.
 
