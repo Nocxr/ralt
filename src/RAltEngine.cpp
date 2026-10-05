@@ -52,10 +52,31 @@ void RAltEngine::Initialize(HINSTANCE instance, HWND hostWindow)
 
     if (!keyboardHook_)
         enabled_ = false;
+
+    foregroundHook_ =
+        SetWinEventHook(
+            EVENT_SYSTEM_FOREGROUND,
+            EVENT_SYSTEM_FOREGROUND,
+            nullptr,
+            ForegroundWinEventProc,
+            0,
+            0,
+            WINEVENT_OUTOFCONTEXT);
+
+    TrackForegroundWindow(
+        GetForegroundWindow());
 }
 
 void RAltEngine::Shutdown()
 {
+    if (foregroundHook_)
+    {
+        UnhookWinEvent(
+            foregroundHook_);
+
+        foregroundHook_ = nullptr;
+    }
+
     if (keyboardHook_)
     {
         UnhookWindowsHookEx(
@@ -82,6 +103,7 @@ void RAltEngine::SetEnabled(bool enabled)
     {
         triggerHeld_ = false;
         suppressEscUp_ = false;
+        previousShortcutDown_ = false;
         HideOverlay();
     }
 }
@@ -304,8 +326,32 @@ RAltEngine::KeyboardHookProc(
             lParam);
     }
 
+    const bool previousShortcut =
+        key->vkCode == VK_OEM_2 ||
+        key->vkCode == VK_DIVIDE;
+
+    if (previousShortcut &&
+        instance_->previousShortcutDown_ &&
+        up)
+    {
+        instance_->previousShortcutDown_ = false;
+        return 1;
+    }
+
     if (instance_->triggerHeld_)
     {
+        if (previousShortcut)
+        {
+            if (down &&
+                !instance_->previousShortcutDown_)
+            {
+                instance_->previousShortcutDown_ = true;
+                instance_->SwitchToPreviousWindow();
+            }
+
+            return 1;
+        }
+
         if (key->vkCode >= 'A' &&
             key->vkCode <= 'Z')
         {
@@ -349,10 +395,39 @@ RAltEngine::KeyboardHookProc(
         lParam);
 }
 
+void CALLBACK
+RAltEngine::ForegroundWinEventProc(
+    HWINEVENTHOOK hook,
+    DWORD event,
+    HWND hwnd,
+    LONG idObject,
+    LONG idChild,
+    DWORD eventThread,
+    DWORD eventTime)
+{
+    (void)hook;
+    (void)eventThread;
+    (void)eventTime;
+
+    if (!instance_ ||
+        event != EVENT_SYSTEM_FOREGROUND ||
+        idObject != OBJID_WINDOW ||
+        idChild != CHILDID_SELF)
+    {
+        return;
+    }
+
+    instance_->TrackForegroundWindow(
+        hwnd);
+}
+
 void RAltEngine::TriggerDown()
 {
     if (!enabled_ || triggerHeld_)
         return;
+
+    TrackForegroundWindow(
+        GetForegroundWindow());
 
     triggerHeld_ = true;
     ShowOverlay();
@@ -407,6 +482,50 @@ void RAltEngine::Select(
 
     HideOverlay();
     Activate(entry.hwnd);
+}
+
+void RAltEngine::SwitchToPreviousWindow()
+{
+    const HWND foreground =
+        GetForegroundWindow();
+
+    HWND target = nullptr;
+
+    if (foreground != currentForeground_ &&
+        currentForeground_ &&
+        IsSwitchable(currentForeground_))
+    {
+        target = currentForeground_;
+    }
+    else if (previousForeground_ &&
+             previousForeground_ != foreground &&
+             IsSwitchable(previousForeground_))
+    {
+        target = previousForeground_;
+    }
+
+    if (!target)
+        return;
+
+    HideOverlay();
+    Activate(target);
+}
+
+void RAltEngine::TrackForegroundWindow(
+    HWND hwnd)
+{
+    if (!hwnd ||
+        hwnd == currentForeground_ ||
+        !IsSwitchable(hwnd))
+    {
+        return;
+    }
+
+    previousForeground_ =
+        currentForeground_;
+
+    currentForeground_ =
+        hwnd;
 }
 
 void RAltEngine::Refresh()
@@ -736,10 +855,11 @@ std::wstring RAltEngine::AppName(
 int RAltEngine::DesiredOverlayHeight() const
 {
     const int rowCount =
-        groups_.empty()
-            ? 1
-            : static_cast<int>(
-                groups_.size());
+        1 +
+        (groups_.empty()
+             ? 1
+             : static_cast<int>(
+                   groups_.size()));
 
     return 62 +
         rowCount * 24 +
@@ -929,6 +1049,30 @@ void RAltEngine::PaintOverlay()
         RGB(235, 235, 235));
 
     int y = 52;
+
+    {
+        const wchar_t* previousLine =
+            L"/   Previous app";
+
+        RECT rowRect{
+            14,
+            y,
+            client.right - 14,
+            y + 22
+        };
+
+        DrawTextW(
+            dc,
+            previousLine,
+            -1,
+            &rowRect,
+            DT_LEFT |
+                DT_SINGLELINE |
+                DT_VCENTER |
+                DT_END_ELLIPSIS);
+
+        y += 24;
+    }
 
     if (groups_.empty())
     {
