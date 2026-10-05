@@ -52,6 +52,7 @@ private:
     HWND hostWindow_ = nullptr;
     HWND overlayWindow_ = nullptr;
     HHOOK keyboardHook_ = nullptr;
+    HWINEVENTHOOK foregroundHook_ = nullptr;
 
     HFONT titleFont_ = nullptr;
     HFONT rowFont_ = nullptr;
@@ -63,7 +64,11 @@ private:
     bool enabled_ = true;
     bool triggerHeld_ = false;
     bool suppressEscUp_ = false;
+    bool previousShortcutDown_ = false;
     bool settingsPositioned_ = false;
+
+    HWND currentForeground_ = nullptr;
+    HWND previousForeground_ = nullptr;
 
     std::map<wchar_t, std::vector<WindowEntry>> groups_;
     std::map<wchar_t, size_t> indices_;
@@ -83,12 +88,23 @@ private:
         WPARAM wParam,
         LPARAM lParam);
 
+    static void CALLBACK ForegroundWinEventProc(
+        HWINEVENTHOOK hook,
+        DWORD event,
+        HWND hwnd,
+        LONG idObject,
+        LONG idChild,
+        DWORD eventThread,
+        DWORD eventTime);
+
     bool CreateOverlayWindow();
     void DestroyOverlayWindow();
 
     void TriggerDown();
     void TriggerUp();
     void Select(wchar_t letter);
+    void SwitchToPreviousWindow();
+    void TrackForegroundWindow(HWND hwnd);
 
     void Refresh();
     void ConsiderWindow(HWND hwnd);
